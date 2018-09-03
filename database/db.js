@@ -32,6 +32,6 @@ module.exports.Transaction = mongoose.model('Transaction');
 module.exports.Logs = mongoose.model('Logs');
 module.exports.transactionReceipt = mongoose.model('transactionReceipt');
 
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost/blockDB');
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost/blockDB', { useNewUrlParser: true });
 
 // mongoose.set('debug', true);

@@ -1,3 +1,7 @@
+
+#divergent! do not use except in bcrd for now reimagining  
+
+
 # ETCExplorer
 
 <b>Live Version: [etherhub.io](http://etherhub.io)</b>

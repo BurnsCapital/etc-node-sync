@@ -13,8 +13,8 @@ var web3 = require('./tools/ethernode.js');
 var config = require('./tools/config.js');
 
 // tools
-var syncChain = require('./tools/syncChain.js');
-var runPatcher = require('./tools/patcher.js');
+var syncChain = require('./tools/'+ config.nodeType+'-syncChain.js');
+var runPatcher = require('./tools/'+ config.nodeType+'-patcher.js');
 
 //lib functions.
 var blockLib = require('./lib/blockLib.js');

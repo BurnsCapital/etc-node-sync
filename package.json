@@ -1,8 +1,7 @@
 {
-  "name": "ETC-syncer",
+  "name": "blockmonsterDB",
   "private": false,
   "version": "0.1.0",
-  "description": "A lightweight ethereum classic block syncer",
   "repository": "https://github.com/ethereumproject/explorer",
   "license": "MIT",
   "scripts": {

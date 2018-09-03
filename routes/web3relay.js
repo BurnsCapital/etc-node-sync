@@ -4,8 +4,9 @@
     Endpoint for client to talk to etc node
 */
 
-var Web3 = require("web3");
-var web3;
+var _ = require('lodash');
+
+var web3 = require('../tools/ethernode.js');
 
 var BigNumber = require('bignumber.js');
 var etherUnits = require(__lib + "etherUnits.js")
@@ -14,18 +15,8 @@ var getLatestBlocks = require('./index').getLatestBlocks;
 var filterBlocks = require('./filters').filterBlocks;
 var filterTrace = require('./filters').filterTrace;
 
-
-if (typeof web3 !== "undefined") {
-  web3 = new Web3(web3.currentProvider);
-} else {
-  web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
-}
-
-if (web3.isConnected()) 
-  console.log("Web3 connection established");
-else
-  throw "No connection";
-
+/*Start config for node connection and sync*/
+var config = require('../tools/config.js');
 
 var newBlocks = web3.eth.filter("latest");
 var newTxs = web3.eth.filter("pending");
@@ -39,8 +30,21 @@ exports.data = function(req, res){
     web3.eth.getTransaction(txHash, function(err, tx) {
       if(err || !tx) {
         console.error("TxWeb3 error :" + err)
-        res.write(JSON.stringify({"error": true}));
-        res.end();
+        if (!tx) {
+          web3.eth.getBlock(txHash, function(err, block) {
+            if(err || !block) {
+              console.error("BlockWeb3 error :" + err)
+              res.write(JSON.stringify({"error": true}));
+            } else {
+              console.log("BlockWeb3 found: " + txHash)
+              res.write(JSON.stringify({"error": true, "isBlock": true}));
+            }
+            res.end();
+          });
+        } else {
+          res.write(JSON.stringify({"error": true}));
+          res.end();
+        }
       } else {
         var ttx = tx;
         ttx.value = etherUnits.toEther( new BigNumber(tx.value), "wei");
@@ -70,8 +74,8 @@ exports.data = function(req, res){
   } else if ("addr_trace" in req.body) {
     var addr = req.body.addr_trace.toLowerCase();
     // need to filter both to and from
-    // from block to end block, paging "toAddress":[addr], 
-    // start from creation block to speed things up 
+    // from block to end block, paging "toAddress":[addr],
+    // start from creation block to speed things up
     // TODO: store creation block
     var filter = {"fromBlock":"0x1d4c00", "toAddress":[addr]};
     web3.trace.filter(filter, function(err, tx) {
@@ -82,7 +86,7 @@ exports.data = function(req, res){
         res.write(JSON.stringify(filterTrace(tx)));
       }
       res.end();
-    }) 
+    })
   } else if ("addr" in req.body) {
     var addr = req.body.addr.toLowerCase();
     var options = req.body.options;
@@ -91,7 +95,7 @@ exports.data = function(req, res){
 
     if (options.indexOf("balance") > -1) {
       try {
-        addrData["balance"] = web3.eth.getBalance(addr);  
+        addrData["balance"] = web3.eth.getBalance(addr);
         addrData["balance"] = etherUnits.toEther(addrData["balance"], 'wei');
       } catch(err) {
         console.error("AddrWeb3 error :" + err);
@@ -109,7 +113,7 @@ exports.data = function(req, res){
     if (options.indexOf("bytecode") > -1) {
       try {
          addrData["bytecode"] = web3.eth.getCode(addr);
-         if (addrData["bytecode"].length > 2) 
+         if (addrData["bytecode"].length > 2)
             addrData["isContract"] = true;
          else
             addrData["isContract"] = false;
@@ -118,15 +122,20 @@ exports.data = function(req, res){
         addrData = {"error": true};
       }
     }
-   
+
     res.write(JSON.stringify(addrData));
     res.end();
 
 
   } else if ("block" in req.body) {
-    var blockNum = parseInt(req.body.block);
+    var blockNumOrHash;
+    if (/^(0x)?[0-9a-f]{64}$/i.test(req.body.block.trim())) {
+        blockNumOrHash = req.body.block.toLowerCase();
+    } else {
+        blockNumOrHash = parseInt(req.body.block);
+    }
 
-    web3.eth.getBlock(blockNum, function(err, block) {
+    web3.eth.getBlock(blockNumOrHash, function(err, block) {
       if(err || !block) {
         console.error("BlockWeb3 error :" + err)
         res.write(JSON.stringify({"error": true}));
@@ -136,6 +145,71 @@ exports.data = function(req, res){
       res.end();
     });
 
+    /*
+    / TODO: Refactor, "block" / "uncle" determinations should likely come later
+    / Can parse out the request once and then determine the path.
+    */
+  } else if ("uncle" in req.body) {
+    var uncle = req.body.uncle.trim();
+    var arr = uncle.split('/');
+    var blockNumOrHash; // Ugly, does the same as blockNumOrHash above
+    var uncleIdx = parseInt(arr[1]) || 0;
+
+    if (/^(?:0x)?[0-9a-f]{64}$/i.test(arr[0])) {
+      blockNumOrHash = arr[0].toLowerCase();
+      console.log(blockNumOrHash)
+    } else {
+      blockNumOrHash = parseInt(arr[0]);
+    }
+
+    if (typeof blockNumOrHash == 'undefined') {
+      console.error("UncleWeb3 error :" + err);
+      res.write(JSON.stringify({"error": true}));
+      res.end();
+      return;
+    }
+
+    web3.eth.getUncle(blockNumOrHash, uncleIdx, function(err, uncle) {
+      if(err || !uncle) {
+        console.error("UncleWeb3 error :" + err)
+        res.write(JSON.stringify({"error": true}));
+      } else {
+        res.write(JSON.stringify(filterBlocks(uncle)));
+      }
+      res.end();
+    });
+
+  } else if ("action" in req.body) {
+    if (req.body.action == 'hashrate') {
+      web3.eth.getBlock('latest', function(err, latest) {
+        if(err || !latest) {
+          console.error("StatsWeb3 error :" + err);
+          res.write(JSON.stringify({"error": true}));
+          res.end();
+        } else {
+          console.log("StatsWeb3: latest block: " + latest.number);
+          var checknum = latest.number - 100;
+          if(checknum < 0)
+            checknum = 0;
+          var nblock = latest.number - checknum;
+          web3.eth.getBlock(checknum, function(err, block) {
+            if(err || !block) {
+              console.error("StatsWeb3 error :" + err);
+              res.write(JSON.stringify({"blockHeight": latest.number, "difficulty": latest.difficulty, "blockTime": 0, "hashrate": 0 }));
+            } else {
+              console.log("StatsWeb3: check block: " + block.number);
+              var blocktime = (latest.timestamp - block.timestamp) / nblock;
+              var hashrate = latest.difficulty / blocktime;
+              res.write(JSON.stringify({"blockHeight": latest.number, "difficulty": latest.difficulty, "blockTime": blocktime, "hashrate": hashrate }));
+            }
+            res.end();
+          });
+        }
+      });
+    } else {
+      console.error("Invalid Request: " + action)
+      res.status(400).send();
+    }
   } else {
     console.error("Invalid Request: " + action)
     res.status(400).send();
@@ -144,4 +218,3 @@ exports.data = function(req, res){
 };
 
 exports.eth = web3.eth;
-  

@@ -7,17 +7,27 @@ angular.module('BlocksApp').controller('TxController', function($stateParams, $r
     $rootScope.$state.current.data["pageSubTitle"] = $stateParams.hash;
     $scope.hash = $stateParams.hash;
     $scope.tx = {"hash": $scope.hash};
+    $scope.settings = $rootScope.setup;
 
     //fetch web3 stuff
     $http({
       method: 'POST',
       url: '/web3relay',
       data: {"tx": $scope.hash}
-    }).success(function(data) {
-      $scope.tx = data;
-      if (data.timestamp)
-        $scope.tx.datetime = new Date(data.timestamp*1000); 
-      if (data.isTrace) // Get internal txs
+    }).then(function(resp) {
+      if (resp.data.error) {
+        if (resp.data.isBlock) {
+          // this is a blockHash
+          $location.path("/block/" + $scope.hash);
+          return;
+        }
+        $location.path("/err404/tx/" + $scope.hash);
+        return;
+      }
+      $scope.tx = resp.data;
+      if (resp.data.timestamp)
+        $scope.tx.datetime = new Date(resp.data.timestamp*1000); 
+      if (resp.data.isTrace) // Get internal txs
         fetchInternalTxs();
     });
 
@@ -26,8 +36,8 @@ angular.module('BlocksApp').controller('TxController', function($stateParams, $r
         method: 'POST',
         url: '/web3relay',
         data: {"tx_trace": $scope.hash}
-      }).success(function(data) {
-        $scope.internal_transactions = data;
+      }).then(function(resp) {
+        $scope.internal_transactions = resp.data;
       });      
     }
 })

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require( './db' );
+require( './database/db.js' );
 
 var express = require('express');
 var path = require('path');
@@ -8,6 +8,9 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
 
+//load config files
+var config = require('./tools/config.js');
+//load express
 var app = express();
 app.set('port', process.env.PORT || 3000);
 
@@ -25,17 +28,21 @@ app.use(express.static(path.join(__dirname, 'public')));
 global.__lib = __dirname + '/lib/';
 
 
-// client
+// client routing
 
 app.get('/', function(req, res) {
-  res.render('index');
+  res.render('index', config);
+});
+
+app.get('/config', function(req, res) {
+  res.json(config.settings);
 });
 
 require('./routes')(app);
 
 // let angular catch them
 app.use(function(req, res) {
-  res.render('index');
+  res.render('index', config);
 });
 
 // error handlers
@@ -63,9 +70,10 @@ app.use(function(err, req, res, next) {
     });
 });
 
-var http = require('http').Server(app);
-//var io = require('socket.io')(http);
 
+var http = require('http').Server(app);
+
+//var io = require('socket.io')(http);
 // web3socket(io);
 
 http.listen(app.get('port'), '0.0.0.0', function() {

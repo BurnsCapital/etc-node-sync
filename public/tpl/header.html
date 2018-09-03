@@ -4,7 +4,7 @@
     <!-- BEGIN LOGO -->
     <div class="page-logo">
         <a href="/">
-            <img src="/img/explorer-logo.png" alt="logo" class="logo-default" />
+            <img ng-show="settings.logo" src="{{settings.logo}}" alt="logo" class="logo-default" />
         </a>
     </div>
     <!-- END LOGO -->
@@ -17,7 +17,7 @@
                 <li class="dropdown">
                     <form name="form.searchForm" class="search-form">
                         <div class="input-group">
-                            <input type="text" name="explorerSearch" class="form-control" placeholder="Search by Address / Txhash / BlockNum" ng-model="form.searchInput" ng-keyup="$event.keyCode == 13 ? searchQuery(form.searchInput) : null">
+                            <input type="text" name="explorerSearch" class="form-control" placeholder="Search by Address / Txhash / BlockNum / BlockHash" ng-model="form.searchInput" ng-keyup="$event.keyCode == 13 ? searchQuery(form.searchInput) : null">
                             <span class="input-group-btn">
                                 <a class="btn" ng-click="searchQuery(form.searchInput)">
                                     <i class="icon-magnifier"></i>
@@ -93,12 +93,20 @@
                                     <div class="col-md-12">
                                         <ul class="mega-menu-submenu">
                                             <li>
-                                                <a href="/stats/etc_hashrate">
+                                                <a href="/stats/hashrate">
                                                     <i class="fa fa-line-chart"></i> HashRate Growth Chart </a>
                                             </li>
                                             <li>
                                                 <a href="/stats/miner_hashrate">
                                                     <i class="fa fa-line-chart"></i> Miner Distribution Chart</a>
+                                            </li>
+                                            <li>
+                                                <a href="/stats/difficulty">
+                                                    <i class="fa fa-line-chart"></i> Difficulty Chart</a>
+                                            </li>
+                                            <li>
+                                                <a href="/stats/blocktime">
+                                                    <i class="fa fa-line-chart"></i> Blocktime Chart</a>
                                             </li>
                                             <li>
                                                 <a href="/stats/The_bomb_chart">
@@ -153,7 +161,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="http://etcstats.net" target="_blank">
+                            <a href="https://classicstats.net" target="_blank">
                                 <i class="fa fa-bar-chart"></i>
                                 <span class="title" data-toggle="tooltip" title="Mainnet Stats"> Live Network Stats </span>
                             </a>

@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "start": "forever index.js & ",
-    "pretest": "copyfiles app.js app/  ",
+    "pretest": " ",
     "test": "./node_modules/.bin/mocha --reporter spec  "
   },
   "dependencies": {

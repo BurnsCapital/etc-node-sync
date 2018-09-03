@@ -6,12 +6,12 @@ var _ = require('lodash');
 var config = { nodeAddr: 'localhost', gethPort: 8545 };
 
 try {
-  var local = require('../config.json');
+  var local = require('../.conf/config.json');
   _.extend(config, local);
   console.log('config.json found.');
 } catch (error) {
   if (error.code === 'MODULE_NOT_FOUND') {
-    var local = require('../config.example.json');
+    var local = require('../config.json');
     _.extend(config, local);
     console.log('No config file found. Using default configuration... (config.example.json)');
     } else {

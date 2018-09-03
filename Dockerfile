@@ -1,9 +1,12 @@
 FROM node:latest
 
-COPY . /
+WORKDIR /usr/src/app
 
-RUN npm i
+RUN wget https://github.com/BurnsCapital/etc-node-sync/archive/v0.0.1.tar.gz \
+  && tar -zxvf v0.0.1.tar.gz \
+  && cd etc-node-sync-0.0.1 \
+  && npm i
 
-EXPOSE 3000
+CMD ["npm", "start"]
 
-ENTRYPOINT ["node"]
+volume ./data:/usr/src/app/.conf

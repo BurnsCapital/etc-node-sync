@@ -23,4 +23,5 @@ module.exports = new Schema(
     "blockTime": Number,
     "uncles": [String],
     "transactionCount" : Number
-});
+}, {collection: "Blocks"}
+);

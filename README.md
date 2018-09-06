@@ -2,6 +2,15 @@
 #divergent! do not use except in bcrd for now reimagining  
 
 
+to do:
+
+- 0mq for chains that support
+- switch from mongo to couchdb
+
+
+
+
+
 # ETCExplorer
 
 <b>Live Version: [etherhub.io](http://etherhub.io)</b>

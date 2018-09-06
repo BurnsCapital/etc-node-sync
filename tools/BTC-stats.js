@@ -2,12 +2,18 @@
   Tool for calculating block stats
 */
 
-var web3 = require('../tools/ethernode.js');
+var client = require('../tools/BTC-node.js');
 
 var mongoose = require( 'mongoose' );
 var BlockStat = require( '../database/db.js' ).BlockStat;
 
+
+
+
 var updateStats = function(range, interval, rescan) {
+
+    mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost/blockDB');
+    mongoose.set('debug', true);
 
     var latestBlock = web3.eth.blockNumber;
 
@@ -142,8 +148,18 @@ if (process.env.RESCAN) {
     rescan = true;
 }
 
+// run
+//updateStats(range, interval, rescan);
+/*
+if (!rescan) {
+    setInterval(function() {
+      updateStats(range, interval);
+    }, statInterval);
+}
+*/
+
 function listenBlocks(config) {
-    var newBlocks = web3.eth.filter("latest");
+    var newBlocks = client.getblockcount;
     newBlocks.watch(function (error,latestBlock) {
     if(error) {
         blockLib.logger.log('error','Error: ' + error);
@@ -151,8 +167,8 @@ function listenBlocks(config) {
         blockLib.logger.log('warn','Warning: null block hash');
     } else {
       blockLib.logger.log('verbose','Found new block: ' + latestBlock);
-      if(web3.isConnected()) {
-        web3.eth.getBlock(latestBlock, true, function(error,blockData) {
+      if(client.getblockcount != null) {
+        client.getBlock(getblockhash(latestBlock), true, function(error,blockData) {
           if(error) {
             blockLib.logger.log('warn','Warning: error on getting block with hash/number: ' +   latestBlock + ': ' + error);
           }else if(blockData == null) {
@@ -163,21 +179,12 @@ function listenBlocks(config) {
           }
         });
       }else{
-        blockLib.logger.log('error','Error: Web3 connection time out trying to get block ' + latestBlock + ' retrying connection now');
+        blockLib.logger.log('error','Error: RPC connection time out trying to get block ' + latestBlock + ' retrying connection now');
         blocklib.sleep(500);
-        listenBlocks(config);
+       listenBlocks(config);
       }
     }
   });
 };
-// run
-//updateStats(range, interval, rescan);
-/*
-if (!rescan) {
-    setInterval(function() {
-      updateStats(range, interval);
-    }, statInterval);
-}
-*/
-module.exports.updateStats = updateStats;
+
 module.exports.listenBlocks = listenBlocks;

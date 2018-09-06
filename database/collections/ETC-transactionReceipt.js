@@ -13,6 +13,6 @@ module.exports = new Schema(
     "contractAddress" : String,
     "cumulativeGasUsed" : Number,
     "gasUsed" : Number,
-    "logs" : String
+    "logs" : [String]
   }, {collection: "TransactionReceipt"}
 );

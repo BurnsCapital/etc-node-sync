@@ -1,0 +1,27 @@
+{
+   "nodeType":     "ETC",
+   "title":        "blockmonster",
+   "startBlock":   0,
+   "logLevel":     "info",
+   "syncAll":      true,
+   "patch":        true,
+   "patchBlocks":  100,
+   "bulkSize":     100,
+    "uri" :        null,
+
+    "nodeAddr":     "localhost",
+    "gethPort":     3100,
+    "isSSL" :       false,
+    "unsafeTLS" :   false,
+    "userName" :    "useer",
+    "password" :    "password",
+    "timeout" :     0,
+    "sslCA"   :     "myca.cert",
+
+    "dbHost":       "localhost",
+    "dbPort" :      "27017",
+    "isOpen" :      true,
+    "dbUser" :      "",
+    "dbPass" :      ""
+
+}

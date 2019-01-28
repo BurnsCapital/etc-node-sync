@@ -8,18 +8,14 @@ var Block           = db.Block;
 var Transaction     = db.Transaction;
 
 // tools
-var web3 = require('../tools/ethernode.js');
-
-// lib
-//lib functions.
-var blockLib = require('../lib/blockLib.js');
+var { web3, logger, writeBlockToDB, writeTransactionsToDB, sleep } = require('../common');
 
 var syncChain = function(config, nextBlock){
   if(web3.isConnected()) {
     if (typeof nextBlock === 'undefined') {
       prepareSync(config, function(error, startBlock) {
         if(error) {
-          blockLib.logger.log('error','error: ' + error);
+          logger.log('error','error: ' + error);
           return;
         }
         syncChain(config, startBlock);
@@ -28,12 +24,12 @@ var syncChain = function(config, nextBlock){
     }
 
     if( nextBlock == null ) {
-      blockLib.logger.log('info','nextBlock is null');
+      logger.log('info','nextBlock is null');
       return;
     } else if ( nextBlock < config.startBlock ) {
-      blockLib.writeBlockToDB(config, null, true);
-      blockLib.writeTransactionsToDB(config, null, true);
-      blockLib.logger.log('info','*** Sync Finsihed ***');
+      writeBlockToDB(config, null, true);
+      writeTransactionsToDB(config, null, true);
+      logger.log('info','*** Sync Finsihed ***');
       config.syncAll = false;
       return;
     }
@@ -42,12 +38,12 @@ var syncChain = function(config, nextBlock){
     while(nextBlock >= config.startBlock && count > 0) {
       web3.eth.getBlock(nextBlock, true, function(error,blockData) {
         if(error) {
-          blockLib.logger.log('warn','error on getting block with hash/number: ' + nextBlock + ': ' + error);
+          logger.log('warn','error on getting block with hash/number: ' + nextBlock + ': ' + error);
         }else if(blockData == null) {
-          blockLib.logger.log('warn', 'null block data received from the block with hash/number: ' + nextBlock);
+          logger.log('warn', 'null block data received from the block with hash/number: ' + nextBlock);
         }else{
-          blockLib.writeBlockToDB(config, blockData);
-          blockLib.writeTransactionsToDB(config, blockData);
+          writeBlockToDB(config, blockData);
+          writeTransactionsToDB(config, blockData);
         }
       });
       nextBlock--;
@@ -56,8 +52,8 @@ var syncChain = function(config, nextBlock){
 
     setTimeout(function() { syncChain(config, nextBlock); }, 500);
   } else {
-    blockLib.logger.log('error', 'Web3 connection time out trying to get block ' + nextBlock + ' retrying connection now');
-    blockLib.sleep(500);
+    logger.log('error', 'Web3 connection time out trying to get block ' + nextBlock + ' retrying connection now');
+    sleep(500);
     syncChain(config, nextBlock);
   }
 }
@@ -77,27 +73,27 @@ var prepareSync = function(config, callback) {
         if(latestBlock === 'latest') {
           web3.eth.getBlock(latestBlock, true, function(error, blockData) {
             if(error) {
-              blockLib.logger.log('warn','Warning: error on getting block with hash/number: ' +   latestBlock + ': ' + error);
+              logger.log('warn','Warning: error on getting block with hash/number: ' +   latestBlock + ': ' + error);
             } else if(blockData == null) {
-              blockLib.logger.log('warn','Warning: null block data received from the block with hash/number: ' + latestBlock);
+              logger.log('warn','Warning: null block data received from the block with hash/number: ' + latestBlock);
             } else {
-              blockLib.logger.log('info','Starting block number = ' + blockData.number);
+              logger.log('info','Starting block number = ' + blockData.number);
               blockNumber = blockData.number - 1;
               callback(null, blockNumber);
             }
           });
         } else {
-          blockLib.logger.log('info','Starting block number = ' + latestBlock);
+          logger.log('info','Starting block number = ' + latestBlock);
           blockNumber = latestBlock - 1;
           callback(null, blockNumber);
         }
       } else {
-        blockLib.logger.log('error','Error: Web3 connection error');
+        logger.log('error','Error: Web3 connection error');
         callback(err, null);
       }
     }else{
       blockNumber = docs[0].number - 1;
-      blockLib.logger.log('info','Old block found. Starting block number = ' + blockNumber);
+      logger.log('info','Old block found. Starting block number = ' + blockNumber);
       callback(null, blockNumber);
     }
   });

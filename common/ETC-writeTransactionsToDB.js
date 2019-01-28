@@ -5,9 +5,10 @@ var mongoose        = require( 'mongoose' );
 var Transaction     = mongoose.model( 'Transaction' );
 const util = require('util')
 
-var blockLib = require('./blockLib.js');
+var { logger, etherUnits, writeTransactionReceiptToDB } = require('./index.js');
 
- module.exports = function(config, blockData, flush) {
+
+module.exports = function(config, blockData, flush) {
   var self = this;
   if (!self.bulkOps) {
     self.bulkOps = [];
@@ -17,11 +18,11 @@ var blockLib = require('./blockLib.js');
     for (d in blockData.transactions) {
       var txData = blockData.transactions[d];
       txData.timestamp = blockData.timestamp;
-      txData.value = blockLib.etherUnits.toEther(new blockLib.BigNumber(txData.value), 'wei');
-      blockLib.writeTransactionReceiptToDB(txData.hash);
+      txData.value = etherUnits.toEther(new BigNumber(txData.value), 'wei');
+      writeTransactionReceiptToDB(txData.hash);
       self.bulkOps.push(txData);
     }
-    blockLib.logger.log('info',' block #' + blockData.number.toString() + ': ' + blockData.transactions.length.toString() + ' transactions recorded.');
+    logger.log('info',' block #' + blockData.number.toString() + ': ' + blockData.transactions.length.toString() + ' transactions recorded.');
   }
   self.blocks++;
 
@@ -34,13 +35,13 @@ var blockLib = require('./blockLib.js');
     Transaction.collection.insert(bulk, function( err, tx ){
       if ( typeof err !== 'undefined' && err ) {
         if (err.code == 11000) {
-            blockLib.logger.log('error','Skip: Duplicate transaction key ' + err);
+            logger.log('error','Skip: Duplicate transaction key ' + err);
         }else{
-          blockLib.logger.log('error','Error: Aborted due to error on Transaction: ' + err);
+          logger.log('error','Error: Aborted due to error on Transaction: ' + err);
           process.exit(9);
         }
       }else{
-        blockLib.logger.log('verbose','* ' + tx.insertedCount + ' transactions successfully recorded.');
+        logger.log('verbose','* ' + tx.insertedCount + ' transactions successfully recorded.');
       }
     });
   }

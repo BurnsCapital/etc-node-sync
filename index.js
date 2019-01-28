@@ -1,6 +1,6 @@
 /*
 Name: Ethereum Blockchain syncer
-Version: .0.0.2
+Version: 0.2.0
 This file will start syncing the blockchain from the node address you provide in the conf.json file.
 Please read the README in the root directory that explains the parameters of this code
 */
@@ -8,31 +8,29 @@ Please read the README in the root directory that explains the parameters of thi
 // DB
 require( './database/db.js' );
 
-// Sets address for RPC WEB3 to connect to, usually your node IP address defaults ot localhost
-var config = require('./tools/config.js');
+//common functions.
+const { config, logger } = require('./common');
 
 // tools
 var syncChain = require('./tools/'+ config.nodeType+'-syncChain.js');
 var runPatcher = require('./tools/'+ config.nodeType+'-patcher.js');
 var blockStats = require('./tools/'+ config.nodeType+'-stats.js')
-//lib functions.
-var blockLib = require('./lib/blockLib.js');
 
 
 // patch missing blocks
 if (config.patch === true){
-  blockLib.logger.log('info','Checking for missing blocks');
+  logger.log('info','Checking for missing blocks');
   runPatcher(config);
 }
 
 // Starts full sync when set to true in config
 if (config.syncAll === true){
-  blockLib.logger.log('info','Starting Full Sync');
+  logger.log('info','Starting Full Sync');
   syncChain(config);
 }
 
 // Start listening for latest blocks
 if (!config.syncAll && !config.patch ){
-  blockLib.logger.log('info','Starting Listen Sync');
+  logger.log('info','Starting Listen Sync');
   blockStats.listenBlocks(config);
 }

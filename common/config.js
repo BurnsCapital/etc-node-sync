@@ -83,4 +83,7 @@ if (!('userName' in config)) {
           , "password" : config.password};
  //console.log('Connecting ' + protocol + config.nodeAddr + ':' + config.gethPort + ' with user: ' + config.userName + ' ...');
 }
-module.exports = config;
+
+module.exports = {
+  config : config 
+};

@@ -2,7 +2,7 @@
   Tool for calculating block stats
 */
 
-var web3 = require('../tools/ethernode.js');
+var { web3, logger } = require('../common');
 
 var mongoose = require( 'mongoose' );
 var BlockStat = require( '../database/db.js' ).BlockStat;

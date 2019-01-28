@@ -1,8 +1,7 @@
 var mongoose = require( 'mongoose' );
 var Schema   = mongoose.Schema;
 
-var config = require('../.conf/config.json');
-
+const { config } = require('../common/config');
 
 // Colllections
 var Block              = require('./collections/'+ config.nodeType +'-Block.js');
